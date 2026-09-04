@@ -1,0 +1,11 @@
+[package]
+name = "cmpx-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+clap = { version = "4.6.6", default-features = true }
+cmpx-core = { path = "../cmpx-core" }
+tokio = { version = "1.53.1", features = ["rt", "rt-multi-thread", "macros"] }
+futures.workspace = true
+rayon.workspace = true

@@ -1,0 +1,24 @@
+[package]
+name = "cmpx"
+version.workspace = true
+edition.workspace = true
+
+[package.metadata.packager]
+product-name = "cmpx"
+identifier = "com.ryntric.cmpx"
+before-packaging-command = "cargo build --release"
+icons = [
+    "assets/icon.icns",
+    "assets/icon.ico",
+    "assets/icon.png",
+]
+
+[[package.metadata.packager.file-associations]]
+extensions = ["cmpx"]
+name = "cmpx Session"
+description = "cmpX comparison session"
+role = "editor"
+mime-type = "application/x-cmpx"
+
+[dependencies]
+gpui = { version = "0.2.2" }
