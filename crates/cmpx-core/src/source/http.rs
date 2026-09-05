@@ -13,13 +13,13 @@ pub enum HttpMethod {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct HttpSource {
+pub struct HttpConfig {
     url: String,
     #[serde(default)]
     method: HttpMethod,
 }
 
-impl HttpSource {
+impl HttpConfig {
     fn new(url: impl Into<String>) -> Self {
         Self {
             url: url.into(),
@@ -27,8 +27,8 @@ impl HttpSource {
         }
     }
 
-    pub fn builder(url: impl Into<String>) -> HttpSourceBuilder {
-        HttpSourceBuilder::new(url)
+    pub fn builder(url: impl Into<String>) -> HttpConfigBuilder {
+        HttpConfigBuilder::new(url)
     }
 
     pub(crate) fn method(&self) -> HttpMethod {
@@ -40,23 +40,23 @@ impl HttpSource {
     }
 }
 
-pub struct HttpSourceBuilder {
-    source: HttpSource,
+pub struct HttpConfigBuilder {
+    config: HttpConfig,
 }
 
-impl HttpSourceBuilder {
+impl HttpConfigBuilder {
     fn new(url: impl Into<String>) -> Self {
         Self {
-            source: HttpSource::new(url),
+            config: HttpConfig::new(url.into()),
         }
     }
 
     pub fn method(mut self, method: HttpMethod) -> Self {
-        self.source.method = method;
+        self.config.method = method;
         self
     }
 
-    pub fn build(self) -> HttpSource {
-        self.source
+    pub fn build(self) -> HttpConfig {
+        self.config
     }
 }

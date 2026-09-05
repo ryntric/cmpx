@@ -1,53 +1,68 @@
 pub mod file;
 pub mod http;
 
-use file::*;
-use http::*;
+use crate::source::file::FileConfig;
+use crate::source::http::HttpConfig;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SourceDefinition {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct SourceId(Uuid);
+
+impl SourceId {
+    pub fn new() -> Self {
+        Self(Uuid::new_v4())
+    }
+}
+
+impl Default for SourceId {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Source {
+    id: SourceId,
     name: String,
     format: SourceFormat,
     #[serde(flatten)]
-    kind: SourceKind,
+    config: SourceConfig,
 }
 
-impl SourceDefinition {
-    pub fn http(name: impl Into<String>, format: SourceFormat, source: HttpSource) -> Self {
+impl Source {
+    pub fn new(name: impl Into<String>, format: SourceFormat, config: SourceConfig) -> Source {
         Self {
+            id: SourceId::default(),
             name: name.into(),
             format,
-            kind: SourceKind::Http(source),
+            config,
         }
     }
 
-    pub fn file(name: impl Into<String>, format: SourceFormat, source: FileSource) -> Self {
-        Self {
-            name: name.into(),
-            format,
-            kind: SourceKind::File(source),
-        }
-    }
-
-    pub fn format(&self) -> SourceFormat {
-        self.format
+    pub fn id(&self) -> SourceId {
+        self.id
     }
 
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    pub(crate) fn kind(&self) -> &SourceKind {
-        &self.kind
+    pub fn format(&self) -> SourceFormat {
+        self.format
+    }
+
+    pub fn config(&self) -> &SourceConfig {
+        &self.config
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", content = "config", rename_all = "snake_case")]
-pub(crate) enum SourceKind {
-    Http(HttpSource),
-    File(FileSource),
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SourceConfig {
+    Http(HttpConfig),
+    File(FileConfig),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -57,39 +72,4 @@ pub enum SourceFormat {
     Yaml,
     Xml,
     Text,
-}
-
-#[derive(Debug, Clone)]
-pub struct SourceData {
-    data: Vec<u8>,
-    metadata: SourceMetadata,
-}
-
-impl SourceData {
-    pub fn new(data: Vec<u8>, metadata: SourceMetadata) -> Self {
-        Self { data, metadata }
-    }
-
-    pub fn data(&self) -> &[u8] {
-        &self.data
-    }
-
-    pub fn metadata(&self) -> &SourceMetadata {
-        &self.metadata
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct SourceMetadata {
-    format: SourceFormat,
-}
-
-impl SourceMetadata {
-    pub fn new(format: SourceFormat) -> Self {
-        Self { format }
-    }
-
-    pub fn format(&self) -> SourceFormat {
-        self.format
-    }
 }

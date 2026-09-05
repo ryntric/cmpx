@@ -1,11 +1,25 @@
-use crate::loader::error::SourceLoadError;
-use crate::source::file::FileSource;
+use super::Loader;
 
-use super::Loadable;
+use super::LoadedSource;
+use crate::loader::error::LoadSourceError;
+use crate::source::Source;
+use crate::source::file::FileConfig;
 
-impl Loadable for FileSource {
-    async fn load(&self) -> Result<Vec<u8>, SourceLoadError> {
-        let data = tokio::fs::read(self.path()).await?;
-        Ok(data)
+pub(crate) struct FileLoader;
+
+impl FileLoader {
+    pub fn new() -> FileLoader {
+        Self
+    }
+}
+
+impl Loader<FileConfig> for FileLoader {
+    async fn load(
+        &self,
+        source: &Source,
+        config: &FileConfig,
+    ) -> Result<LoadedSource, LoadSourceError> {
+        let bytes = tokio::fs::read(config.path()).await?;
+        Ok(LoadedSource::new(source, bytes, None))
     }
 }

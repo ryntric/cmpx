@@ -1,12 +1,12 @@
 use crate::parser::document::{Node, Number};
 use crate::parser::error::ParserError;
-use crate::parser::{Document, DocumentParser};
+use crate::parser::{Document, Parser};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
 pub(crate) struct JsonDocumentParser {}
 
-impl DocumentParser for JsonDocumentParser {
+impl Parser for JsonDocumentParser {
     fn parse(bytes: &[u8]) -> Result<Document, ParserError> {
         let value: Value = serde_json::from_slice::<Value>(bytes)?;
         let node: Node = value.into();

@@ -1,4 +1,6 @@
+use crate::differ::PathSegment::Root;
 use crate::parser::document::{Document, Node};
+use crate::source::SourceId;
 use std::collections::HashMap;
 use thiserror::Error;
 
@@ -7,12 +9,11 @@ pub struct Differ;
 impl Differ {
     pub fn diff(sources: &[DiffSource]) {
         let mut matrix = DiffMatrix::new(sources.len());
-
-        for (index, source) in sources.iter().enumerate() {
+        for source in sources {
             Self::collect(
                 source.document.root(),
                 DocumentPath::root(),
-                index,
+                source.id,
                 &mut matrix,
             )
         }
@@ -22,35 +23,52 @@ impl Differ {
     fn collect<'a>(
         node: &'a Node,
         path: DocumentPath,
-        source_index: usize,
+        id: SourceId,
         matrix: &mut DiffMatrix<'a>,
     ) {
         match node {
             Node::Object(object) => {
                 for (key, value) in object {
-                    Self::collect(value, path.field(key), source_index, matrix);
+                    Self::collect(value, path.field(key), id, matrix);
                 }
             }
 
             Node::Array(array) => {
                 for (index, value) in array.iter().enumerate() {
-                    Self::collect(value, path.index(index), source_index, matrix);
+                    Self::collect(value, path.index(index), id, matrix);
                 }
             }
 
-            _ => matrix.set(source_index, path, Some(node)),
+            _ => matrix.set(id, path, Some(node)),
         }
     }
 }
 
-pub struct DiffSource<'a> {
-    name: &'a str,
+pub struct DiffSource {
+    id: SourceId,
+    name: String,
     document: Document,
 }
 
-impl<'a> DiffSource<'a> {
-    pub fn new(name: &'a str, document: Document) -> Self {
-        Self { name, document }
+impl DiffSource {
+    pub fn new(id: SourceId, name: impl Into<String>, document: Document) -> Self {
+        Self {
+            id,
+            name: name.into(),
+            document,
+        }
+    }
+
+    pub fn id(&self) -> SourceId {
+        self.id
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn document(&self) -> &Document {
+        &self.document
     }
 }
 
@@ -71,7 +89,7 @@ pub struct DocumentPath {
 impl DocumentPath {
     pub fn root() -> Self {
         Self {
-            segments: Vec::new(),
+            segments: vec![Root],
         }
     }
 
@@ -110,26 +128,27 @@ impl<'a> DiffMatrix<'a> {
         }
     }
 
-    pub fn set(&mut self, index: usize, path: DocumentPath, value: Option<&'a Node>) {
+    pub fn set(&mut self, id: SourceId, path: DocumentPath, value: Option<&'a Node>) {
         let entry = self.rows.entry(path);
-        let row = entry.or_insert_with(|| DiffRow::new(self.source_count));
-        row.set(index, value);
+        let row = entry.or_insert_with(|| DiffRow::new());
+        row.set(id, value);
     }
 }
 
 #[derive(Debug)]
 struct DiffRow<'a> {
-    values: Vec<Option<&'a Node>>,
+    values: HashMap<SourceId, Option<&'a Node>>,
 }
 
 impl<'a> DiffRow<'a> {
-    pub fn new(size: usize) -> Self {
+    pub fn new() -> Self {
         Self {
-            values: vec![None; size],
+            values: HashMap::default(),
         }
     }
 
-    pub fn set(&mut self, index: usize, value: Option<&'a Node>) {
-        self.values[index] = value;
+    pub fn set(&mut self, id: SourceId, value: Option<&'a Node>) {
+        let entry = self.values.entry(id);
+        entry.insert_entry(value);
     }
 }
