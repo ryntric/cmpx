@@ -1,5 +1,7 @@
-use crate::differ::PathSegment::Root;
-use crate::parser::document::{Document, Node};
+mod matrix;
+
+use crate::differ::matrix::DiffColumn;
+use crate::parser::document::{Document, DocumentPath, Node};
 use crate::source::SourceId;
 use std::collections::HashMap;
 use thiserror::Error;
@@ -10,61 +12,28 @@ impl Differ {
     pub fn diff(sources: &[DiffSource]) {
         let mut matrix = DiffMatrix::new(sources.len());
         for source in sources {
-            Self::collect(
-                source.document.root(),
-                DocumentPath::root(),
-                source.id,
-                &mut matrix,
-            )
+            let column = DiffColumn::from(source);
+            println!("{:?}", column);
+            println!()
         }
         println!("{:?}", matrix);
     }
 
-    fn collect<'a>(
-        node: &'a Node,
-        path: DocumentPath,
-        id: SourceId,
-        matrix: &mut DiffMatrix<'a>,
-    ) {
-        match node {
-            Node::Object(object) => {
-                for (key, value) in object {
-                    Self::collect(value, path.field(key), id, matrix);
-                }
-            }
-
-            Node::Array(array) => {
-                for (index, value) in array.iter().enumerate() {
-                    Self::collect(value, path.index(index), id, matrix);
-                }
-            }
-
-            _ => matrix.set(id, path, Some(node)),
-        }
-    }
+    fn collect<'a>(node: &'a Node, path: DocumentPath, id: SourceId, matrix: &mut DiffMatrix<'a>) {}
 }
 
 pub struct DiffSource {
     id: SourceId,
-    name: String,
     document: Document,
 }
 
 impl DiffSource {
-    pub fn new(id: SourceId, name: impl Into<String>, document: Document) -> Self {
-        Self {
-            id,
-            name: name.into(),
-            document,
-        }
+    pub fn new(id: SourceId, document: Document) -> Self {
+        Self { id, document }
     }
 
     pub fn id(&self) -> SourceId {
         self.id
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
     }
 
     pub fn document(&self) -> &Document {
@@ -81,39 +50,6 @@ pub enum DiffError {
     IncompatibleNodes,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct DocumentPath {
-    segments: Vec<PathSegment>,
-}
-
-impl DocumentPath {
-    pub fn root() -> Self {
-        Self {
-            segments: vec![Root],
-        }
-    }
-
-    pub fn field(&self, field: impl Into<String>) -> Self {
-        let mut segments = self.segments.clone();
-        segments.push(PathSegment::Field(field.into()));
-
-        Self { segments }
-    }
-
-    pub fn index(&self, index: usize) -> Self {
-        let mut segments = self.segments.clone();
-        segments.push(PathSegment::Index(index));
-
-        Self { segments }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum PathSegment {
-    Field(String),
-    Index(usize),
-    Root,
-}
 #[derive(Debug)]
 struct DiffMatrix<'a> {
     source_count: usize,

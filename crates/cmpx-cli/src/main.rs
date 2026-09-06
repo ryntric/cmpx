@@ -12,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Fake HTTP Data 1",
             SourceFormat::Json,
             SourceConfig::Http(
-                HttpConfig::builder("https://jsonplaceholder.typicode.com/todos/1")
+                HttpConfig::builder("https://dummyjson.com/comments?limit=10&skip=10&select=body,postId")
                     .method(HttpMethod::Get)
                     .build(),
             ),
@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Fake HTTP Data 2",
             SourceFormat::Json,
             SourceConfig::Http(
-                HttpConfig::builder("https://jsonplaceholder.typicode.com/todos/1")
+                HttpConfig::builder("https://dummyjson.com/comments?limit=10&skip=10&select=body,postId")
                     .method(HttpMethod::Get)
                     .build(),
             ),
@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Fake HTTP Data 3",
             SourceFormat::Json,
             SourceConfig::Http(
-                HttpConfig::builder("https://jsonplaceholder.typicode.com/todos/1")
+                HttpConfig::builder("https://dummyjson.com/comments?limit=10&skip=10&select=body,postId")
                     .method(HttpMethod::Get)
                     .build(),
             ),
@@ -39,7 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Fake HTTP Data 4",
             SourceFormat::Json,
             SourceConfig::Http(
-                HttpConfig::builder("https://jsonplaceholder.typicode.com/todos/1")
+                HttpConfig::builder("https://dummyjson.com/comments?limit=10&skip=10&select=body,postId")
                     .method(HttpMethod::Get)
                     .build(),
             ),
@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Fake HTTP Data 5",
             SourceFormat::Json,
             SourceConfig::Http(
-                HttpConfig::builder("https://jsonplaceholder.typicode.com/todos/1")
+                HttpConfig::builder("https://dummyjson.com/comments?limit=10&skip=10&select=body,postId")
                     .method(HttpMethod::Get)
                     .build(),
             ),
@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Fake HTTP Data 6",
             SourceFormat::Json,
             SourceConfig::Http(
-                HttpConfig::builder("https://jsonplaceholder.typicode.com/todos/1")
+                HttpConfig::builder("https://dummyjson.com/comments?limit=10&skip=10&select=body,postId")
                     .method(HttpMethod::Get)
                     .build(),
             ),
@@ -72,7 +72,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .map(|source| {
                     return DiffSource::new(
                         source.id(),
-                        source.name(),
                         DocumentParser::parse(source).unwrap(),
                     );
                 })
